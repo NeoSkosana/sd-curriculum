@@ -1,0 +1,692 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Future of Tech Talent | An Academy Proposal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        /* Custom Styles for the Presentation */
+        :root {
+            --cursor-size: 20px;
+        }
+
+        body {
+            font-family: 'Source Code Pro', monospace;
+            background-color: #000000;
+            color: #FFFFFF;
+            overflow: hidden; /* Prevent vertical scrolling */
+            cursor: none; /* Hide default cursor */
+        }
+
+        /* Custom Cursor */
+        .custom-cursor {
+            position: fixed;
+            width: var(--cursor-size);
+            height: var(--cursor-size);
+            background-color: white; /* Changed from border to background-color */
+            border-radius: 50%;
+            pointer-events: none;
+            transform: translate(-50%, -50%);
+            transition: width 0.3s, height 0.3s, background-color 0.3s;
+            z-index: 9999;
+            top: 0;
+            left: 0;
+            mix-blend-mode: difference; /* This creates the color inversion effect */
+        }
+        
+        body:hover .custom-cursor {
+            opacity: 1;
+        }
+
+        .cursor-grow {
+            width: calc(var(--cursor-size) * 2.5);
+            height: calc(var(--cursor-size) * 2.5);
+            background-color: white; /* The blend mode will invert this to black over white elements */
+        }
+
+        canvas#bg-canvas {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            z-index: -1;
+            opacity: 0.1;
+        }
+
+        .slide-container {
+            display: flex;
+            width: 700vw; /* 7 slides * 100vw */
+            height: 100vh;
+            transition: transform 1.2s cubic-bezier(0.86, 0, 0.07, 1);
+        }
+
+        .slide {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 5vw;
+            flex-shrink: 0;
+            position: relative;
+        }
+
+        /* Text Animations */
+        .animated-text-container {
+            clip-path: polygon(0 0, 100% 0, 100% 100%, 0% 100%);
+        }
+        
+        .word {
+            display: inline-block;
+            overflow: hidden;
+            vertical-align: bottom;
+        }
+
+        .animated-text .char {
+            display: inline-block;
+            transform: translateY(110%);
+            transition: transform 0.8s;
+            transition-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+        }
+
+        .active .animated-text .char {
+            transform: translateY(0);
+        }
+
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: opacity 0.8s ease-out 0.4s, transform 0.8s ease-out 0.4s;
+        }
+
+        .active .fade-in {
+            opacity: 1;
+            transform: translateY(0);
+        }
+        
+        .active .fade-in-delay-1 { transition-delay: 0.8s; }
+        .active .fade-in-delay-2 { transition-delay: 1s; }
+        .active .fade-in-delay-3 { transition-delay: 1.2s; }
+
+        /* Navigation dots */
+        .nav-dots {
+            position: fixed;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 15px;
+            z-index: 100;
+        }
+
+        .dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            border: 2px solid #FFFFFF;
+            cursor: none;
+            transition: background-color 0.3s ease, transform 0.3s ease;
+        }
+
+        .dot.active {
+            background-color: #FFFFFF;
+            transform: scale(1.2);
+        }
+        
+        h1, h2, h3 { font-weight: 600; }
+        
+        .highlight {
+            background-color: #FFFFFF;
+            color: #000000;
+            padding: 0.1em 0.3em;
+            display: inline-block;
+            line-height: 1.2;
+        }
+
+        .outline-button {
+            border: 2px solid #FFFFFF;
+            padding: 12px 24px;
+            transition: background-color 0.3s, color 0.3s;
+            cursor: none;
+        }
+        .outline-button:hover {
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        
+        .logo {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            width: 120px;
+            height: auto;
+            z-index: 100;
+        }
+        
+        /* Modal Styles */
+        .modal-backdrop {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            z-index: 1000;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease;
+        }
+
+        .modal-content {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.95);
+            background-color: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 12px;
+            padding: 2rem;
+            width: 90vw;
+            max-width: 800px;
+            height: 80vh;
+            overflow-y: auto;
+            z-index: 1001;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.5s ease, transform 0.5s ease;
+        }
+        
+        .modal-backdrop.visible, .modal-content.visible {
+            opacity: 1;
+            pointer-events: all;
+        }
+        .modal-content.visible {
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 1rem;
+            right: 1.5rem;
+            font-size: 2rem;
+            font-weight: 300;
+            color: #aaa;
+            cursor: none;
+            transition: color 0.3s;
+        }
+        .modal-close:hover {
+            color: #fff;
+        }
+
+        /* Curriculum Card Hover Effect */
+        .curriculum-card {
+            border: 1px solid #444;
+            transition: transform 0.4s cubic-bezier(0.19, 1, 0.22, 1), box-shadow 0.4s cubic-bezier(0.19, 1, 0.22, 1), background-color 0.3s, color 0.3s;
+            cursor: none;
+            background-color: #000000;
+            color: #FFFFFF;
+        }
+        .curriculum-card:hover {
+            transform: translateY(-10px) rotateX(5deg) scale(1.03);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+            background-color: #FFFFFF;
+            color: #000000;
+        }
+        .curriculum-card p, .curriculum-card h3 {
+            transition: color 0.3s;
+        }
+        .curriculum-card:hover p, .curriculum-card:hover h3 {
+            color: #000000;
+        }
+        .curriculum-card .view-link {
+            opacity: 0;
+            transform: translateY(10px);
+            transition: opacity 0.3s, transform 0.3s;
+        }
+        .curriculum-card:hover .view-link {
+            opacity: 1;
+            transform: translateY(0);
+        }
+    </style>
+</head>
+<body>
+    <div class="custom-cursor"></div>
+    <canvas id="bg-canvas"></canvas>
+    <img src="assets/Full Logo White.svg" alt="Academy Logo" class="logo" onerror="this.style.display='none'">
+
+    <div id="slide-container" class="slide-container">
+        <!-- Slide 1: Intro -->
+        <div class="slide active">
+            <div class="text-center max-w-4xl">
+                <h3 class="text-2xl md:text-3xl mb-4 fade-in">The South African Tech Landscape Presents</h3>
+                <h1 class="text-5xl md:text-8xl font-bold mb-8 animated-text-container"><span class="animated-text">A Critical <span class="highlight">Challenge.</span></span></h1>
+                <p class="text-xl md:text-2xl text-gray-300 fade-in fade-in-delay-1">The demand for elite engineering talent is accelerating. Traditional education isn't keeping pace. A significant opportunity exists for a new kind of institution.</p>
+            </div>
+        </div>
+
+        <!-- Slide 2: The Flawed Solutions -->
+        <div class="slide">
+            <div class="text-left max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div class="fade-in">
+                    <h2 class="text-4xl md:text-6xl mb-6 animated-text-container"><span class="animated-text">The Old Models Are <span class="highlight">Broken.</span></span></h2>
+                    <p class="text-lg text-gray-300">Universities are too theoretical. Generic bootcamps are too superficial. Both leave a gap between graduation and true, day-one productivity.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="fade-in fade-in-delay-1">
+                        <h3 class="text-2xl font-semibold mb-2">University Degrees</h3>
+                        <p class="text-gray-400">Strong on theory, but graduates often lack the practical, modern workflow skills required by today's top companies.</p>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <h3 class="text-2xl font-semibold mb-2">Standard Bootcamps</h3>
+                        <p class="text-gray-400">Fast-paced, but often sacrifice depth, leaving graduates unprepared for complex engineering challenges.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 3: Our Solution -->
+        <div class="slide">
+            <div class="text-center max-w-4xl">
+                <h3 class="text-2xl md:text-3xl mb-4 fade-in">Our Solution</h3>
+                <h1 class="text-5xl md:text-8xl font-bold mb-8 animated-text-container">
+                    <span class="animated-text">Forge <span class="highlight">Engineers.</span><br>Not Just Graduates.</span>
+                </h1>
+                <p class="text-xl md:text-2xl text-gray-300 fade-in fade-in-delay-1">We introduce a premier academy built on a core philosophy: the <span class="font-semibold">Founder's Mentality</span>. We teach students to identify problems, build solutions, and launch products, creating proactive, high-impact talent.</p>
+            </div>
+        </div>
+
+        <!-- Slide 4: The Curriculum -->
+        <div class="slide">
+            <div class="text-left w-full max-w-6xl">
+                <h2 class="text-4xl md:text-6xl mb-12 text-center fade-in animated-text-container"><span class="animated-text">A Path for Every <span class="highlight">Ambition.</span></span></h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+                    <div class="p-8 rounded-lg curriculum-card flex flex-col justify-between fade-in fade-in-delay-1" data-track="accelerator">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">6-Month Accelerator</h3>
+                            <p class="text-gray-400 mb-4">THE CAREER LAUNCHER</p>
+                            <p>An intensive program to transform motivated learners into job-ready, full-stack developers.</p>
+                        </div>
+                        <p class="font-semibold mt-6 view-link">Click to View Curriculum &rarr;</p>
+                    </div>
+                    <div class="p-8 border-2 border-white rounded-lg curriculum-card flex flex-col justify-between fade-in fade-in-delay-2" data-track="professional">
+                         <div>
+                            <h3 class="text-2xl font-bold mb-4">12-Month Professional</h3>
+                            <p class="text-gray-300 mb-4">THE SPECIALIST</p>
+                            <p>Our flagship. Combines a full-stack core with a deep specialization in AI, Cloud, or Product Engineering.</p>
+                        </div>
+                        <p class="font-semibold mt-6 view-link">Click to View Curriculum &rarr;</p>
+                    </div>
+                    <div class="p-8 rounded-lg curriculum-card flex flex-col justify-between fade-in fade-in-delay-3" data-track="leader">
+                        <div>
+                            <h3 class="text-2xl font-bold mb-4">3-Year Tech Leader</h3>
+                            <p class="text-gray-400 mb-4">THE ARCHITECT</p>
+                            <p>A true university alternative, forging future CTOs and tech leaders through a deep, practical residency.</p>
+                        </div>
+                        <p class="font-semibold mt-6 view-link">Click to View Curriculum &rarr;</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 5: The AI Advantage -->
+        <div class="slide">
+            <div class="text-center max-w-4xl">
+                <h3 class="text-2xl md:text-3xl mb-4 fade-in">Our Unfair Advantage</h3>
+                <h1 class="text-5xl md:text-8xl font-bold mb-8 animated-text-container"><span class="animated-text">The AI Core.</span></h1>
+                <p class="text-xl md:text-2xl text-gray-300 fade-in fade-in-delay-1">We are the only academy that deeply integrates AI Engineering into our core curriculum. Our graduates don't just use AI tools—they build, deploy, and manage the intelligent systems that will define the next decade of technology.</p>
+            </div>
+        </div>
+
+        <!-- Slide 6: The Partnership Model (Refined) -->
+        <div class="slide">
+            <div class="text-left max-w-5xl w-full grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
+                <div class="fade-in">
+                    <h2 class="text-4xl md:text-6xl mb-6 animated-text-container"><span class="animated-text">A New Model for <span class="highlight">Talent.</span></span></h2>
+                    <p class="text-lg text-gray-300">We partner directly with South Africa's leading companies to build the exact talent they need, de-risking their hiring and guaranteeing a pipeline of elite engineers.</p>
+                </div>
+                <div class="space-y-8">
+                    <div class="fade-in fade-in-delay-1">
+                        <h3 class="text-2xl font-semibold mb-2">Invest in Your Pipeline</h3>
+                        <p class="text-gray-400">Sponsor a student's education and gain a highly skilled, productive employee from day one, trained in your way of working.</p>
+                    </div>
+                    <div class="fade-in fade-in-delay-2">
+                        <h3 class="text-2xl font-semibold mb-2">Co-create Future Leaders</h3>
+                        <p class="text-gray-400">Collaborate with us on real-world residency projects, solving your business challenges while mentoring the next generation of tech leaders.</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Slide 7: Call to Action -->
+        <div class="slide">
+            <div class="text-center max-w-4xl">
+                <h1 class="text-5xl md:text-8xl font-bold mb-8 animated-text-container"><span class="animated-text">Let's Build the Future. <span class="highlight">Together.</span></span></h1>
+                <p class="text-xl md:text-2xl text-gray-300 mb-12 fade-in fade-in-delay-1">Partner with us to cultivate the next generation of tech leaders in South Africa. Invest in talent that builds, innovates, and leads from day one.</p>
+                <a href="#" class="outline-button text-xl font-semibold inline-block fade-in fade-in-delay-2">Become a Partner</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Navigation Dots -->
+    <div id="nav-dots" class="nav-dots"></div>
+
+    <!-- Modal Structure -->
+    <div id="modal-backdrop" class="modal-backdrop"></div>
+    <div id="modal-content" class="modal-content">
+        <span id="modal-close" class="modal-close">&times;</span>
+        <div id="modal-body"></div>
+    </div>
+
+    <script>
+        // --- DATA STORE ---
+        const contentData = {
+            accelerator: {
+                title: '6-Month "Accelerator" Program',
+                content: `<h2 class="text-3xl font-bold mb-2">The Career Launcher</h2><p class="text-gray-400 mb-6">An intensive program to transform motivated learners into job-ready, full-stack developers with a founder's mindset.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Months 1-2: Frontend Foundations</h4><p class="text-gray-400 text-sm">HTML, CSS, JavaScript, Git, React basics.</p></div>
+                            <div><h4 class="font-semibold text-lg">Months 3-4: Backend Foundations</h4><p class="text-gray-400 text-sm">Node.js, Express, PostgreSQL, REST APIs, Authentication.</p></div>
+                            <div><h4 class="font-semibold text-lg">Months 5-6: Full-Stack Integration & AI Launch</h4><p class="text-gray-400 text-sm">Docker, CI/CD, AWS, OpenAI API integration.</p></div>
+                          </div>
+                          <div class="mt-6 pt-6 border-t border-gray-700">
+                            <h4 class="font-semibold text-lg mb-2">Practical Project Example</h4>
+                            <p class="text-gray-400 text-sm">Build a "Community Skill-Sharing Platform" where users can offer and find local skills. The capstone AI feature could be an "AI Mentor" that suggests learning paths based on a user's goals.</p>
+                          </div>
+                          `,
+                personaKey: 'persona_accelerator'
+            },
+            professional: {
+                title: '12-Month "Professional" Program',
+                content: `<h2 class="text-3xl font-bold mb-2">The Specialist</h2><p class="text-gray-400 mb-6">Our flagship program. Combines the full-stack core with a deep specialization in AI, Cloud Engineering, or Product Engineering.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Months 1-6: Full-Stack Accelerator Core</h4><p class="text-gray-400 text-sm">Complete mastery of the 6-month curriculum, resulting in a comprehensive full-stack venture project.</p></div>
+                            <div><h4 class="font-semibold text-lg">Months 7-12: Specialization Tracks</h4><p class="text-gray-400 text-sm">Choose a major to build a second, more advanced portfolio piece:</p></div>
+                          </div>
+                          <div class="flex flex-col md:flex-row gap-4 mt-4">
+                            <button class="outline-button flex-1" data-spec-button="ai">AI Engineering</button>
+                            <button class="outline-button flex-1" data-spec-button="cloud">Cloud & Backend</button>
+                            <button class="outline-button flex-1" data-spec-button="product">Product Engineering</button>
+                          </div>`,
+                personaKey: 'persona_professional'
+            },
+            leader: {
+                title: '3-Year "Tech Leader" Program',
+                content: `<h2 class="text-3xl font-bold mb-2">The Architect</h2><p class="text-gray-400 mb-6">A true university alternative. Combines deep theory with a final year-long residency, forging future CTOs and tech leaders.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Year 1: The Professional Core</h4><p class="text-gray-400 text-sm">Completion of the 12-month program and specialization.</p></div>
+                            <div><h4 class="font-semibold text-lg">Year 2: The Architect's Crucible</h4><p class="text-gray-400 text-sm">Deep dive into CS fundamentals, advanced architecture, and autonomous AI agent systems.</p></div>
+                            <div><h4 class="font-semibold text-lg">Year 3: The Tech Leader Residency</h4><p class="text-gray-400 text-sm">A full-year, real-world capstone project with a corporate partner. The project's scope will be carefully defined to be challenging yet achievable, ensuring students can successfully deliver a production-grade system.</p></div>
+                          </div>`,
+                personaKey: 'persona_leader'
+            },
+            ai: {
+                title: 'AI Engineering Specialization',
+                content: `<h2 class="text-3xl font-bold mb-2">AI Engineering</h2><p class="text-gray-400 mb-6">Master the "RAG Stack," build with open-source models, create AI agents, and deploy production-grade AI systems.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Month 7: Foundations & LLM Interaction</h4><p class="text-gray-400 text-sm">Build a 'Prompt Engineering Studio' to master LLM interaction.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 8: The RAG Stack</h4><p class="text-gray-400 text-sm">Implement a full Retrieval-Augmented Generation pipeline to chat with custom data.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 9: Open-Source Models</h4><p class="text-gray-400 text-sm">Integrate and compare open-source models like Llama using Ollama.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 10-12: AI Agents & Production Systems</h4><p class="text-gray-400 text-sm">Build autonomous agents that can use tools, implement safety measures, and deploy to production.</p></div>
+                          </div>
+                           <div class="mt-6 pt-6 border-t border-gray-700">
+                            <h4 class="font-semibold text-lg mb-2">Practical Project Example</h4>
+                            <p class="text-gray-400 text-sm">Build a "Legal Document Analysis Tool" that allows lawyers to upload contracts, ask complex questions about clauses, and get cited answers from the text, powered by a custom RAG pipeline.</p>
+                          </div>`
+            },
+            cloud: {
+                title: 'Cloud Engineering & Advanced Backend',
+                content: `<h2 class="text-3xl font-bold mb-2">Cloud & Backend</h2><p class="text-gray-400 mb-6">Design, deploy, and operate scalable, resilient, and secure backend systems on the cloud.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Month 7: Infrastructure as Code</h4><p class="text-gray-400 text-sm">Define and deploy entire cloud infrastructures using Terraform.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 8: Container Orchestration</h4><p class="text-gray-400 text-sm">Manage and scale applications in a Kubernetes cluster.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 9: Advanced Architectural Patterns</h4><p class="text-gray-400 text-sm">Build microservices and GraphQL gateways.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 10-12: Production Readiness</h4><p class="text-gray-400 text-sm">Master observability with Prometheus/Grafana, security with service mesh, and resilience with chaos engineering.</p></div>
+                          </div>
+                          <div class="mt-6 pt-6 border-t border-gray-700">
+                            <h4 class="font-semibold text-lg mb-2">Practical Project Example</h4>
+                            <p class="text-gray-400 text-sm">Architect and build the backend for a "Scalable E-commerce Platform," featuring separate microservices for users, products, and orders, all managed within a Kubernetes cluster and defined with Terraform.</p>
+                          </div>`
+            },
+            product: {
+                title: 'Product Engineering & Interactive AI',
+                content: `<h2 class="text-3xl font-bold mb-2">Product Engineering</h2><p class="text-gray-400 mb-6">Architect and build beautiful, high-performance user experiences for complex AI products across web and mobile.</p>
+                          <div class="space-y-4 text-left">
+                            <div><h4 class="font-semibold text-lg">Month 7: Advanced Frontend Architecture</h4><p class="text-gray-400 text-sm">Build a professional design system using Storybook and a monorepo.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 8: Performance & Optimization</h4><p class="text-gray-400 text-sm">Profile and optimize applications for speed using Web Vitals and code splitting.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 9: Cross-Platform Mobile</h4><p class="text-gray-400 text-sm">Build a native mobile version of the web app using React Native.</p></div>
+                            <div><h4 class="font-semibold text-lg">Month 10-12: Interactive AI & Launch</h4><p class="text-gray-400 text-sm">Build intuitive UIs for AI systems, handle streaming data, and implement product analytics.</p></div>
+                          </div>
+                          <div class="mt-6 pt-6 border-t border-gray-700">
+                            <h4 class="font-semibold text-lg mb-2">Practical Project Example</h4>
+                            <p class="text-gray-400 text-sm">Build a "Cross-Platform AI-Powered Fitness Coach." This includes a web dashboard for planning workouts (built with the design system) and a React Native mobile app for tracking progress and receiving real-time feedback from an AI coach.</p>
+                          </div>`
+            },
+            persona_accelerator: {
+                title: 'Target Persona: The Career Launcher',
+                content: `<h2 class="text-3xl font-bold mb-2">Target Persona: The Career Launcher</h2><p class="text-gray-400 mb-6">For the 6-Month Accelerator Program</p><div class="space-y-4 text-left"><div><h4 class="font-semibold text-lg">Background</h4><p class="text-gray-400 text-sm">A non-tech professional seeking an efficient, structured path into a high-growth tech career. They are motivated by earning potential and career stability.</p></div><div><h4 class="font-semibold text-lg">Goals</h4><p class="text-gray-400 text-sm">To pivot into a future-proof career and significantly increase earning potential without a multi-year university commitment.</p></div><div><h4 class="font-semibold text-lg">Pain Points</h4><p class="text-gray-400 text-sm">Feels stuck in their current role, finds self-teaching unstructured, and is wary of the financial risk of a career change.</p></div></div>`
+            },
+            persona_professional: {
+                title: 'Target Persona: The Ambitious Specialist',
+                content: `<h2 class="text-3xl font-bold mb-2">Target Persona: The Ambitious Specialist</h2><p class="text-gray-400 mb-6">For the 12-Month Professional Program</p><div class="space-y-4 text-left"><div><h4 class="font-semibold text-lg">Background</h4><p class="text-gray-400 text-sm">A high-potential individual, possibly with some basic coding knowledge, who feels their skills have plateaued.</p></div><div><h4 class="font-semibold text-lg">Goals</h4><p class="text-gray-400 text-sm">To gain a deep, marketable specialization in AI, Cloud, or Product Engineering to stand out and secure a high-impact role at an innovative company.</p></div><div><h4 class="font-semibold text-lg">Pain Points</h4><p class="text-gray-400 text-sm">Finds that most bootcamps offer the same generic curriculum and struggles to find structured paths for advanced, in-demand skills.</p></div></div>`
+            },
+            persona_leader: {
+                title: 'Target Persona: The Future Tech Leader',
+                content: `<h2 class="text-3xl font-bold mb-2">Target Persona: The Future Tech Leader</h2><p class="text-gray-400 mb-6">For the 3-Year Tech Leader Program</p><div class="space-y-4 text-left"><div><h4 class="font-semibold text-lg">Background</h4><p class="text-gray-400 text-sm">A bright, ambitious school-leaver, likely with a hobbyist coding background, who is weighing their options against a traditional university degree.</p></div><div><h4 class="font-semibold text-lg">Goals</h4><p class="text-gray-400 text-sm">To become a CTO, startup founder, or principal engineer. They are seeking a program as rigorous as a top university but far more practical and relevant.</p></div><div><h4 class="font-semibold text-lg">Pain Points</h4><p class="text-gray-400 text-sm">Views university as potentially too slow and theoretical, but sees standard bootcamps as too superficial for their long-term ambitions.</p></div></div>`
+            }
+        };
+
+        document.addEventListener('DOMContentLoaded', () => {
+            // --- MODAL LOGIC ---
+            const modalBackdrop = document.getElementById('modal-backdrop');
+            const modalContent = document.getElementById('modal-content');
+            const modalBody = document.getElementById('modal-body');
+            const modalClose = document.getElementById('modal-close');
+            
+            let isModalOpen = false;
+
+            function openModal(contentKey) {
+                const data = contentData[contentKey];
+                if (!data) return;
+
+                modalBody.innerHTML = `
+                    ${data.content}
+                    ${data.personaKey ? `<button data-persona-button="${data.personaKey}" class="outline-button text-lg font-semibold inline-block mt-8">View Target Persona</button>` : ''}
+                `;
+                
+                if (!isModalOpen) {
+                    modalBackdrop.classList.add('visible');
+                    modalContent.classList.add('visible');
+                    isModalOpen = true;
+                }
+
+                // Add event listeners for specialization buttons
+                modalBody.querySelectorAll('[data-spec-button]').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openModal(button.dataset.specButton);
+                    });
+                });
+                
+                const personaButton = modalBody.querySelector('[data-persona-button]');
+                if (personaButton) {
+                    personaButton.addEventListener('click', (e) => {
+                        e.stopPropagation();
+                        openModal(personaButton.dataset.personaButton);
+                    });
+                }
+            }
+
+            function closeModal() {
+                modalBackdrop.classList.remove('visible');
+                modalContent.classList.remove('visible');
+                isModalOpen = false;
+            }
+
+            document.querySelectorAll('.curriculum-card').forEach(card => {
+                card.addEventListener('click', () => openModal(card.dataset.track));
+            });
+
+            modalClose.addEventListener('click', closeModal);
+            modalBackdrop.addEventListener('click', closeModal);
+
+            // --- SLIDE NAVIGATION ---
+            const slideContainer = document.getElementById('slide-container');
+            const slides = document.querySelectorAll('.slide');
+            const navDotsContainer = document.getElementById('nav-dots');
+            let currentSlide = 0;
+            let isScrolling = false;
+            const totalSlides = slides.length;
+
+            for (let i = 0; i < totalSlides; i++) {
+                const dot = document.createElement('div');
+                dot.classList.add('dot');
+                dot.addEventListener('click', () => goToSlide(i));
+                navDotsContainer.appendChild(dot);
+            }
+            const dots = document.querySelectorAll('.dot');
+
+            function updateActiveState() {
+                slides.forEach((slide, index) => {
+                    slide.classList.toggle('active', index === currentSlide);
+                });
+                dots.forEach((dot, index) => {
+                    dot.classList.toggle('active', index === currentSlide);
+                });
+                animateText(slides[currentSlide]);
+            }
+
+            function goToSlide(slideIndex) {
+                if (isModalOpen) return;
+                if (slideIndex >= 0 && slideIndex < totalSlides) {
+                    currentSlide = slideIndex;
+                    slideContainer.style.transform = `translateX(-${currentSlide * 100}vw)`;
+                    updateActiveState();
+                }
+            }
+
+            function handleScroll(event) {
+                if (isScrolling || isModalOpen) return;
+                isScrolling = true;
+                const delta = Math.sign(event.deltaY);
+                if (delta > 0) goToSlide(currentSlide + 1);
+                else goToSlide(currentSlide - 1);
+                setTimeout(() => { isScrolling = false; }, 1500);
+            }
+            
+            function handleKeyDown(event) {
+                if (isModalOpen) {
+                    if (event.key === 'Escape') closeModal();
+                    return;
+                }
+                if (event.key === 'ArrowRight' || event.key === 'ArrowDown') goToSlide(currentSlide + 1);
+                else if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') goToSlide(currentSlide - 1);
+            }
+
+            window.addEventListener('wheel', handleScroll, { passive: true });
+            window.addEventListener('keydown', handleKeyDown);
+
+            // --- ANIMATIONS & EFFECTS ---
+            function animateText(slide) {
+                const textElements = slide.querySelectorAll('.animated-text');
+                textElements.forEach(textEl => {
+                    if (textEl.dataset.animated) return;
+                    
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = textEl.innerHTML;
+                    
+                    textEl.innerHTML = '';
+                    textEl.dataset.animated = true;
+
+                    Array.from(tempDiv.childNodes).forEach(node => {
+                        if (node.nodeType === Node.TEXT_NODE) {
+                            const text = node.textContent;
+                            text.split(' ').forEach(word => {
+                                if (word.length > 0) {
+                                    const wordSpan = document.createElement('span');
+                                    wordSpan.className = 'word';
+                                    word.split('').forEach((char, i) => {
+                                        const charSpan = document.createElement('span');
+                                        charSpan.className = 'char';
+                                        charSpan.textContent = char;
+                                        charSpan.style.transitionDelay = `${(i) * 0.02}s`;
+                                        wordSpan.appendChild(charSpan);
+                                    });
+                                    textEl.appendChild(wordSpan);
+                                    textEl.append(' ');
+                                }
+                            });
+                        } else {
+                            textEl.appendChild(node.cloneNode(true));
+                        }
+                    });
+                });
+            }
+
+            const cursor = document.querySelector('.custom-cursor');
+            window.addEventListener('mousemove', e => {
+                cursor.style.left = e.clientX + 'px';
+                cursor.style.top = e.clientY + 'px';
+            });
+            document.querySelectorAll('a, button, .curriculum-card, .dot, .modal-close').forEach(el => {
+                el.addEventListener('mouseenter', () => cursor.classList.add('cursor-grow'));
+                el.addEventListener('mouseleave', () => cursor.classList.remove('cursor-grow'));
+            });
+
+            const canvas = document.getElementById('bg-canvas');
+            const ctx = canvas.getContext('2d');
+            let particles = [];
+            
+            function resizeCanvas() {
+                canvas.width = window.innerWidth;
+                canvas.height = window.innerHeight;
+            }
+
+            function createParticles() {
+                particles = [];
+                let particleCount = Math.floor(canvas.width * canvas.height / 20000);
+                for (let i = 0; i < particleCount; i++) {
+                    particles.push({
+                        x: Math.random() * canvas.width,
+                        y: Math.random() * canvas.height,
+                        vx: (Math.random() - 0.5) * 0.3,
+                        vy: (Math.random() - 0.5) * 0.3,
+                        size: Math.random() * 1.5 + 0.5
+                    });
+                }
+            }
+
+            function animateParticles() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.5)';
+                particles.forEach(p => {
+                    p.x += p.vx;
+                    p.y += p.vy;
+                    if (p.x < 0 || p.x > canvas.width) p.vx *= -1;
+                    if (p.y < 0 || p.y > canvas.height) p.vy *= -1;
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                requestAnimationFrame(animateParticles);
+            }
+
+            window.addEventListener('resize', () => {
+                resizeCanvas();
+                createParticles();
+            });
+
+            // Initial setup
+            resizeCanvas();
+            createParticles();
+            animateParticles();
+            updateActiveState();
+        });
+    </script>
+</body>
+</html>
